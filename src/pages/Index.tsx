@@ -17,6 +17,7 @@ interface Listing {
   description: string;
   category: string;
   author: string;
+  contact: string;
   views: number;
   isVip: boolean;
   createdAt: Date;
@@ -29,6 +30,7 @@ const mockListings: Listing[] = [
     description: 'Семья с двумя детьми осталась без крыши над головой после пожара. Нужна помощь с временным жильём и одеждой.',
     category: 'Жильё',
     author: 'Мария К.',
+    contact: '+7 (999) 123-45-67',
     views: 234,
     isVip: true,
     createdAt: new Date('2024-01-15')
@@ -39,6 +41,7 @@ const mockListings: Listing[] = [
     description: 'Одинокой бабушке нужна помощь с покупкой продуктов и лекарств. Может кто-то рядом живёт?',
     category: 'Бытовая помощь',
     author: 'Алексей П.',
+    contact: 'telegram: @aleksey_p',
     views: 156,
     isVip: false,
     createdAt: new Date('2024-01-16')
@@ -49,6 +52,7 @@ const mockListings: Listing[] = [
     description: 'Собираем на операцию для ребёнка. Любая помощь важна и будет принята с благодарностью.',
     category: 'Медицина',
     author: 'Елена С.',
+    contact: 'elena.s@example.com',
     views: 892,
     isVip: true,
     createdAt: new Date('2024-01-14')
@@ -59,6 +63,7 @@ const mockListings: Listing[] = [
     description: 'Человеку с ограниченными возможностями нужна помощь с мелким ремонтом в квартире.',
     category: 'Бытовая помощь',
     author: 'Дмитрий В.',
+    contact: '+7 (987) 654-32-10',
     views: 78,
     isVip: false,
     createdAt: new Date('2024-01-17')
@@ -74,6 +79,7 @@ export default function Index() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [totalVisits] = useState(1247);
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
 
   const [newListing, setNewListing] = useState({
     title: '',
@@ -266,8 +272,9 @@ export default function Index() {
           {filteredListings.map((listing, index) => (
             <Card
               key={listing.id}
-              className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-fade-in"
+              className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-fade-in cursor-pointer"
               style={{ animationDelay: `${index * 100}ms` }}
+              onClick={() => setSelectedListing(listing)}
             >
               <CardHeader>
                 <div className="flex items-start justify-between gap-2">
@@ -306,7 +313,10 @@ export default function Index() {
                   variant="outline"
                   size="sm"
                   className="flex-1 gap-1"
-                  onClick={() => handleBoost(listing.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleBoost(listing.id);
+                  }}
                 >
                   <Icon name="TrendingUp" size={14} />
                   Поднять (20₽)
@@ -315,7 +325,10 @@ export default function Index() {
                   variant="outline"
                   size="sm"
                   className="flex-1 gap-1"
-                  onClick={() => handleVip(listing.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleVip(listing.id);
+                  }}
                   disabled={listing.isVip}
                 >
                   <Icon name="Crown" size={14} />
@@ -338,6 +351,119 @@ export default function Index() {
           </div>
         )}
       </main>
+
+      <Dialog open={!!selectedListing} onOpenChange={() => setSelectedListing(null)}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          {selectedListing && (
+            <>
+              <DialogHeader>
+                <div className="flex items-start justify-between gap-3">
+                  <DialogTitle className="font-heading text-xl pr-8">
+                    {selectedListing.title}
+                  </DialogTitle>
+                  {selectedListing.isVip && (
+                    <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white shrink-0">
+                      <Icon name="Crown" size={12} className="mr-1" />
+                      VIP
+                    </Badge>
+                  )}
+                </div>
+                <DialogDescription className="flex flex-wrap items-center gap-3 text-xs pt-2">
+                  <span className="flex items-center gap-1">
+                    <Icon name="Tag" size={12} />
+                    {selectedListing.category}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Icon name="Eye" size={12} />
+                    {selectedListing.views} просмотров
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Icon name="Calendar" size={12} />
+                    {selectedListing.createdAt.toLocaleDateString('ru-RU')}
+                  </span>
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-6 py-4">
+                <div>
+                  <h4 className="font-heading font-semibold mb-2 flex items-center gap-2">
+                    <Icon name="FileText" size={16} className="text-primary" />
+                    Описание ситуации
+                  </h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {selectedListing.description}
+                  </p>
+                </div>
+                
+                <div className="border-t pt-4">
+                  <h4 className="font-heading font-semibold mb-3 flex items-center gap-2">
+                    <Icon name="User" size={16} className="text-primary" />
+                    Контактная информация
+                  </h4>
+                  <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                    <p className="text-sm">
+                      <span className="font-medium">Автор:</span> {selectedListing.author}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">Связаться:</span> {selectedListing.contact}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <h4 className="font-heading font-semibold mb-3 flex items-center gap-2">
+                    <Icon name="TrendingUp" size={16} className="text-primary" />
+                    Продвижение объявления
+                  </h4>
+                  <div className="grid gap-3">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2 h-auto py-3"
+                      onClick={() => {
+                        handleBoost(selectedListing.id);
+                        setSelectedListing(null);
+                      }}
+                    >
+                      <Icon name="TrendingUp" size={18} className="text-primary" />
+                      <div className="text-left">
+                        <div className="font-semibold">Поднять объявление — 20₽</div>
+                        <div className="text-xs text-muted-foreground">Поднимется в начало ленты</div>
+                      </div>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2 h-auto py-3"
+                      onClick={() => {
+                        handleVip(selectedListing.id);
+                        setSelectedListing(null);
+                      }}
+                      disabled={selectedListing.isVip}
+                    >
+                      <Icon name="Crown" size={18} className="text-orange-500" />
+                      <div className="text-left">
+                        <div className="font-semibold">VIP статус — 100₽</div>
+                        <div className="text-xs text-muted-foreground">
+                          {selectedListing.isVip ? 'VIP уже активен' : 'Неделю в топе с золотой меткой'}
+                        </div>
+                      </div>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" className="flex-1" onClick={() => setSelectedListing(null)}>
+                  Закрыть
+                </Button>
+                <Button className="flex-1 gap-2">
+                  <Icon name="MessageCircle" size={16} />
+                  Откликнуться
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <footer className="border-t mt-16 bg-card/30 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-8">
